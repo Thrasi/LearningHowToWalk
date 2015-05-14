@@ -5,7 +5,7 @@
 #include <time.h>
 #include <ode/ode.h>
 #include <drawstuff/drawstuff.h>
-#include "texturepath.h"
+//#include "texturepath.h"
 #include <fstream>
 using namespace std;
 
@@ -808,7 +808,7 @@ void setDrawStuff() {
 	fn.start   = &start;			
 	fn.step    = &simLoop;		
 	fn.command = &command;			
-	fn.path_to_textures = "../../drawstuff/textures";	
+	fn.path_to_textures = "textures";	
 }
 
 

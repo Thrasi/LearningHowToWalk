@@ -7,7 +7,9 @@
 #include <drawstuff/drawstuff.h>
 //#include "texturepath.h"
 #include <fstream>
+#include <iostream>
 #include "ann.h"
+#include "ga.h"
 #include <typeinfo>
 
 using namespace std;
@@ -24,9 +26,9 @@ const int LINK_NUM=2;  // number of links
 const int JT_NUM  =2;  // number of joints
 const int LEG_NUM =4;  // number of legs
 const int G_LENGTH = 204;	// gene length
-const int POPSIZE = 40;	// population in one generation(only even number)
-const int MAX_GENERATION = 300;
-const double SIM_TIME = 5.0;
+const int POPSIZE = 6;	// population in one generation(only even number)	// 100
+const int MAX_GENERATION = 4;		// 300
+const double SIM_TIME = 1.0;		// 20
 
 fstream file;
 
@@ -64,7 +66,7 @@ dReal  c_y[LEG_NUM][LINK_NUM] = {{ cy1, cy1},{ cy1, cy1},
                                  {-cy1,-cy1},{-cy1,-cy1}};
 dReal  c_z[LEG_NUM][LINK_NUM] =  {{0, -l1}, {0, -l1},{0, -l1},{0, -l1}};
 
-const double one_step = 0.005;	//time of one step
+const double one_step = 0.015;	//time of one step  	// 0.005
 const double para_K = 100000.0;	//elastic modulus
 const double para_C = 1000.0;	//viscous modulus
 const double M_e = 2.71828;
@@ -427,8 +429,8 @@ void Evolve(){
 	//using result[] array and update ind[] array	POPSIZE x G_LENGTH
 	/////////////////////////
 	/////////////////////////
+	createPopulation(result, POPSIZE, ind, G_LENGTH, 5, 0.05);
 	for (int i = 0; i < POPSIZE; i++) {
-		printf("%f\n", result[i]);
 		result[i] = 0;
 	}
 }
@@ -536,9 +538,12 @@ void start(){
 	if(generation==0){
 		float xyz[3] = {  1.0f,  -1.2f, 0.5f};  // View point
 		float hpr[3] = {121.0f, -10.0f, 0.0f};  // View direction
-		//dsSetViewpoint(xyz,hpr);                // Set View point and direction
-		//dsSetSphereQuality(3);
-		//dsSetCapsuleQuality(6);
+
+#ifdef DRAWIT
+			dsSetViewpoint(xyz,hpr);                // Set View point and direction
+			dsSetSphereQuality(3);
+			dsSetCapsuleQuality(6);
+#endif
 
 		GeneInit(ind[ind_num]);
 	}
@@ -613,6 +618,7 @@ void WriteFile(int rank){
 	if(! file.is_open()){
 		exit(0);
 	}
+	
 	file << "generation number:" << generation+1 << ",rank:" << rank+1
 	<< ",result:" << result[record[rank].number]
 	<< ",distance:" << record[rank].distance << endl;
@@ -812,7 +818,9 @@ void simLoop(int pause){
 		}
 	}
 
-	//drawRobot();
+#ifdef DRAWIT
+		drawRobot();
+#endif
 }
 
 
@@ -847,11 +855,15 @@ int main(int argc, char *argv[]){
 
 	makeRobot();
 
+#ifndef DRAWIT
 	start();
 	while (1) {
 		simLoop(0);
 	}
-	//dsSimulationLoop(argc,argv,800,480,&fn);
+#endif
+#ifdef DRAWIT
+	dsSimulationLoop(argc,argv,800,480,&fn);
+#endif
 
 	dSpaceDestroy(space);
 	dWorldDestroy(world);

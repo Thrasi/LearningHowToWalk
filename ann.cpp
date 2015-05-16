@@ -42,7 +42,7 @@ void updateANNLeg(dReal angles[3], dReal force, double f_low, double a_low[3], d
 	int *StoH, int *HtoA, bool sensor_node[4], bool hidden_node[4], double actuator_node[3]) {
 	
 	updateSensorNode(angles, force, f_low, a_low, a_high, sensor_node);
-	int *hidden_in = (int*) malloc(sizeof(int)*4);
+	int *hidden_in = new int[4];
 	multiply(1, 4, 4, sensor_node, StoH, hidden_in);
 	updateHiddenNode(hidden_in, hidden_node);
 	int *actuator_in = new int[3];

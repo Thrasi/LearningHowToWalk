@@ -21,9 +21,9 @@ const int LINK_NUM=2;  // number of links
 const int JT_NUM  =2;  // number of joints
 const int LEG_NUM =4;  // number of legs
 const int G_LENGTH = 204;	// gene length
-const int POPSIZE = 100;	// population in one generation(only even number)
+const int POPSIZE = 40;	// population in one generation(only even number)
 const int MAX_GENERATION = 300;
-const double SIM_TIME = 20.0;
+const double SIM_TIME = 5.0;
 
 fstream file;
 
@@ -67,13 +67,13 @@ const double para_C = 1000.0;	//viscous modulus
 const double M_e = 2.71828;
 
 //node parameter in neural network
-bool sensor_node[LEG_NUM][JT_NUM+2];
-bool hidden_node[LEG_NUM][JT_NUM+2];
-double actuator_node[LEG_NUM][JT_NUM+1];
+bool sensor_node[LEG_NUM][JT_NUM+2];		// 4x4
+bool hidden_node[LEG_NUM][JT_NUM+2];		// 4x4
+double actuator_node[LEG_NUM][JT_NUM+1];	// 4x3
 
 //weight(initialized by a random number)
-int StoH[JT_NUM+2][JT_NUM+2];	//sensor node to hidden node
-int HtoA[JT_NUM+2][JT_NUM+1];	//hidden node to actuator node
+int StoH[JT_NUM+2][JT_NUM+2];	//sensor node to hidden node 		// 4x4
+int HtoA[JT_NUM+2][JT_NUM+1];	//hidden node to actuator node 		// 4x3
 
 //thresholds(initialized by a random number)
 double f_sensor_low;
@@ -81,7 +81,7 @@ double a_sensor_high[JT_NUM+1];
 double a_sensor_low[JT_NUM+1];
 
 //parameter of sigmoid function(initialized by a random number)
-double para_c[JT_NUM+1];	
+double para_c[JT_NUM+1];
 
 //initial position of legs(initialized by a random number)
 double init_state[LEG_NUM][JT_NUM+1];
@@ -365,8 +365,8 @@ void walk(){
 
 void UpdateSensor(){
 	dJointFeedback *fb;
-	dReal fx[LEG_NUM], fy[LEG_NUM], fz[LEG_NUM], force[LEG_NUM];
-	dReal angle[LEG_NUM][JT_NUM+1];
+	dReal fx[LEG_NUM], fy[LEG_NUM], fz[LEG_NUM], force[LEG_NUM];	// 4x1
+	dReal angle[LEG_NUM][JT_NUM+1];		// 4x3
 
 	//update upset sensor
 	fb = dJointGetFeedback(upset_fixed[0]);
@@ -404,7 +404,7 @@ void UpdateSensor(){
 	/////////////////////////
 	//you can write neural network algorithm here
 	//using angle[][] array, force[] array, and threshold prameters(a_sensor_low[], a_sensor_high[], f_sensor_low)
-	//to update sensor_node[][], hidden_node[][], and actuator node[][]
+	//to update sensor_node[][], hidden_node[][], and actuator_node[][]
 	/////////////////////////
 	/////////////////////////
 
@@ -419,6 +419,10 @@ void Evolve(){
 	//using result[] array and update ind[] array
 	/////////////////////////
 	/////////////////////////
+	for (int i = 0; i < POPSIZE; i++) {
+		printf("%f\n", result[i]);
+		result[i] = 0;
+	}
 }
 
 
@@ -524,15 +528,15 @@ void start(){
 	if(generation==0){
 		float xyz[3] = {  1.0f,  -1.2f, 0.5f};  // View point
 		float hpr[3] = {121.0f, -10.0f, 0.0f};  // View direction
-		dsSetViewpoint(xyz,hpr);                // Set View point and direction
-		dsSetSphereQuality(3);
-		dsSetCapsuleQuality(6);
+		//dsSetViewpoint(xyz,hpr);                // Set View point and direction
+		//dsSetSphereQuality(3);
+		//dsSetCapsuleQuality(6);
 
 		GeneInit(ind[ind_num]);
 	}
 
 	Decode(ind[ind_num]);
-	printf("\n***generation no.%d@individual no.%d ***",generation+1,ind_num+1);			
+	printf("\n***generation no.%d @individual no.%d ***",generation+1,ind_num+1);			
 	dWorldSetGravity(world, 0, 0, -0.0);
 
 	//initialize node of neural networks
@@ -601,7 +605,8 @@ void WriteFile(int rank){
 	if(! file.is_open()){
 		exit(0);
 	}
-	file << "generation number:" << generation+1 << ",rank:" << rank+1 << ",result:" << result[record[rank].number]
+	file << "generation number:" << generation+1 << ",rank:" << rank+1
+	<< ",result:" << result[record[rank].number]
 	<< ",distance:" << record[rank].distance << endl;
 
 	file << "gene information:" << endl;
@@ -659,7 +664,7 @@ double Evaluate(double x, double y, double z){
 
 	if(result[ind_num]<0) result[ind_num]=0;
 	if(ifupset) result[ind_num]=0;
-	printf("resultF%f\n",result[ind_num]);
+	printf("result %f\n",result[ind_num]);
 
 	return result[ind_num];
 }
@@ -750,7 +755,7 @@ void simLoop(int pause){
 		times += one_step;
 //		printf("Time Step : %f\n", times);
 		const dReal *pos = dBodyGetPosition(torso.body);
-		printf("x=%f\n", pos[0]);
+		//printf("x=%f\n", pos[0]);
 		++position_count;
 
 		//evaluation
@@ -770,6 +775,7 @@ void simLoop(int pause){
 		UpdateSensor();
 		walk();                               // gait control
 
+		//printf("%f %f\n", times, SIM_TIME);
 		//generation and individual control
 		if(times > SIM_TIME){	//to next individual
 			const dReal *pos = dBodyGetPosition(torso.body);
@@ -798,7 +804,7 @@ void simLoop(int pause){
 		}
 	}
 
-	drawRobot();
+	//drawRobot();
 }
 
 
@@ -833,7 +839,11 @@ int main(int argc, char *argv[]){
 
 	makeRobot();
 
-	dsSimulationLoop(argc,argv,800,480,&fn);
+	start();
+	while (1) {
+		simLoop(0);
+	}
+	//dsSimulationLoop(argc,argv,800,480,&fn);
 
 	dSpaceDestroy(space);
 	dWorldDestroy(world);

@@ -7,6 +7,9 @@
 #include <drawstuff/drawstuff.h>
 //#include "texturepath.h"
 #include <fstream>
+#include "ann.h"
+#include <typeinfo>
+
 using namespace std;
 
 #ifdef dDOUBLE
@@ -408,6 +411,11 @@ void UpdateSensor(){
 	/////////////////////////
 	/////////////////////////
 
+	for (int l = 0; l < LEG_NUM; ++l) {
+		updateANNLeg(angle[l], force[l], f_sensor_low, a_sensor_low, a_sensor_high, para_c,
+			&StoH[0][0], &HtoA[0][0],	sensor_node[l], hidden_node[l], actuator_node[l]);
+	}
+
 }
 
 
@@ -416,7 +424,7 @@ void Evolve(){
 	/////////////////////////
 	/////////////////////////
 	//you can write GA algorithm here
-	//using result[] array and update ind[] array
+	//using result[] array and update ind[] array	POPSIZE x G_LENGTH
 	/////////////////////////
 	/////////////////////////
 	for (int i = 0; i < POPSIZE; i++) {

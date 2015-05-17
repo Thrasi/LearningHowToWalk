@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <ctime>
 #include <cstdio>
+#include <cstdlib>
 
 int *indices;
 int N;
@@ -94,6 +95,8 @@ void createPopulation(double *result, int n, bool** ind, int m, int K, double p)
 	for (int i = 0; i < n; i++) {
 		copy(newInd+m*i, ind[i], m);
 	}
+	delete newInd;
+	delete indices;
 }
 
 void printGene(bool *g, int n) {

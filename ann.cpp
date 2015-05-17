@@ -48,6 +48,8 @@ void updateANNLeg(dReal angles[3], dReal force, double f_low, double a_low[3], d
 	int *actuator_in = new int[3];
 	multiply(1, 4, 3, hidden_node, HtoA, actuator_in);
 	updateActuatorNode(actuator_in, c, actuator_node);
+	delete hidden_in;
+	delete actuator_in;
 }
 
 
